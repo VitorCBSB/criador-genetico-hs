@@ -1,0 +1,43 @@
+name:                criador-genetico
+version:             0.1.0.0
+synopsis:            Criador de FPGAs virtuais de configuracoes arbitrarias.
+description:         Please see README.md
+homepage:            http://github.com/VitorCBSB/criador-genetico#readme
+license:             MIT
+license-file:        LICENSE
+author:              Vitor Coimbra
+maintainer:          vitorcoliveira91@gmail.com
+copyright:           2010 Vitor Coimbra
+category:            Specific
+build-type:          Simple
+-- extra-source-files:
+cabal-version:       >=1.10
+
+library
+  hs-source-dirs:      src
+  exposed-modules:     Lib
+  ghc-options:         -fno-warn-tabs
+  build-depends:       base >= 4.7 && < 5
+                     , extra
+  default-language:    Haskell2010
+
+executable criador-genetico
+  hs-source-dirs:      app
+  main-is:             Main.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -fno-warn-tabs
+  build-depends:       base
+                     , criador-genetico
+  default-language:    Haskell2010
+
+test-suite criador-genetico-test
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  main-is:             Spec.hs
+  build-depends:       base
+                     , criador-genetico
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  default-language:    Haskell2010
+
+source-repository head
+  type:     git
+  location: https://github.com/VitorCBSB/criador-genetico
