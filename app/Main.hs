@@ -13,7 +13,8 @@ actualMain [numInArg, numOutArg, leNumInArg, numRowsArg, numColsArg] =
 	leNumIn = read leNumInArg
 	numRows = read numRowsArg
 	numCols = read numColsArg
-	genParams = GeneticParams numIn numOut leNumIn numRows numCols [True, True, True, True, True, True, True, True]
+	funcoesPermitidas = [True, True, True, True, True, True, True, True]
+	genParams = GeneticParams numIn numOut leNumIn numRows numCols funcoesPermitidas
     in
       do
         arquivoLogicE <- readFile "logic_e_modelo"
