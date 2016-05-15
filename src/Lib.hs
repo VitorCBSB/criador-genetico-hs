@@ -67,11 +67,11 @@ geraFuncoes genParams =
                currentMin idx = currentMax idx - (bitsPinos genParams - 1)
                replaceInput idx = (replace "#cur_min" (show $ currentMin idx)
                                  . replace "#cur_max" (show $ currentMax idx)) inputModelo
-        in
-           if func == "buf" || func == "not" then
-               replaceInput (leNumIn genParams)
-           else
-               intercalate ", " $ map replaceInput [leNumIn genParams, leNumIn genParams - 1..1]
+            in
+               if func == "buf" || func == "not" then
+                   replaceInput (leNumIn genParams)
+               else
+                   intercalate ", " $ map replaceInput [leNumIn genParams, leNumIn genParams - 1..1]
      in
        intercalate "\n" $ zipWith (curry replaceTudoLogicE) [0..] funcoesUsadas
 
