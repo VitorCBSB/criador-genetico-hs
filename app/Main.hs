@@ -11,25 +11,31 @@ main = execParser opts >>= actualMain
             (  fullDesc
             <> progDesc "Generate a logic element grid for genetic circuits in Verilog.")
 
+validate validation value =
+    if validation value then
+        return value
+    else
+        readerError "Validation failed. Re-run with -h for info."
+
 genParams :: Parser GeneticParams
 genParams = GeneticParams
-    <$> option auto
+    <$> option (auto >>= validate (>= 0))
         (  long "numIn"
         <> short 'i'
-        <> help "Input quantity for the genetic circuit. Must be greater than or equal to 0.")
-    <*> option auto
+        <> help "Input quantity for the genetic circuit. Must be at least 0.")
+    <*> option (auto >>= validate (>= 1))
         (  long "numOut"
         <> short 'o'
         <> help "Output quantity for the genetic circuit. Must be at least 1.")
-    <*> option auto
+    <*> option (auto >>= validate (>= 2))
         (  long "leNumIn"
         <> short 'l'
         <> help "Amount of inputs for the basic logic element. Must be at least 2.")
-    <*> option auto
+    <*> option (auto >>= validate (>= 1))
         (  long "numRows"
         <> short 'r'
         <> help "Number of rows for the genetic logic element grid. Must be at least 1.")
-    <*> option auto
+    <*> option (auto >>= validate (>= 1))
         (  long "numCols"
         <> short 'c'
         <> help "Number of columns for the genetic logic element grid. Must be at least 1.")
