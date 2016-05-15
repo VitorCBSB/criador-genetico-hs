@@ -7,25 +7,24 @@ main :: IO ()
 main = getArgs >>= actualMain
 
 actualMain :: [String] -> IO ()
-actualMain [numInArg, numOutArg, leNumInArg, numRowsArg, numColsArg] = 
+actualMain [numInArg, numOutArg, leNumInArg, numRowsArg, numColsArg] =
     let numIn = read numInArg
         numOut = read numOutArg
-	leNumIn = read leNumInArg
-	numRows = read numRowsArg
-	numCols = read numColsArg
-	funcoesPermitidas = [True, True, True, True, True, True, True, True]
-	genParams = GeneticParams numIn numOut leNumIn numRows numCols funcoesPermitidas
+        leNumIn = read leNumInArg
+        numRows = read numRowsArg
+        numCols = read numColsArg
+        funcoesPermitidas = [True, True, True, True, True, True, True, True]
+        genParams = GeneticParams numIn numOut leNumIn numRows numCols funcoesPermitidas
     in
       do
         arquivoLogicE <- readFile "logic_e_modelo"
         arquivoGenetico <- readFile "genetico_modelo"
         arquivoFenotipo <- readFile "fenotipo_modelo"
 
-	writeFile "logic_e.v" (criaArquivoLogicE genParams arquivoLogicE)
-	writeFile "genetico.v" (criaArquivoGenetico genParams arquivoGenetico)
-	writeFile "fenotipo.v" (criaArquivoFenotipo genParams arquivoFenotipo)
+    	writeFile "logic_e.v" (criaArquivoLogicE genParams arquivoLogicE)
+    	writeFile "genetico.v" (criaArquivoGenetico genParams arquivoGenetico)
+    	writeFile "fenotipo.v" (criaArquivoFenotipo genParams arquivoFenotipo)
 
 actualMain _ = do
     nome <- getProgName
     putStrLn $ "uso: " ++ nome ++ " <num_in> <num_out> <le_num_in> <num_rows> <num_cols>"
-
