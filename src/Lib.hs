@@ -96,7 +96,7 @@ geraLes :: GeneticParams -> String
 geraLes genParams =
     let leModelo = intercalate "\n" ["logic_e le#r#c("
                                    , "\t.conf_func(conf_les[#r][#c][#bits_top:#bits_next]),"
-                                   , "\t.conf_ins(conf_les[#bits_rest:0]),"
+                                   , "\t.conf_ins(conf_les[#r][#c][#bits_rest:0]),"
                                    , "\t.all_inputs(all_inputs),"
                                    , "\t.out(le_out[#n])"
                                    , ");\n"]
