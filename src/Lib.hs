@@ -6,6 +6,7 @@ module Lib
     ) where
 
 import Data.List.Extra
+import Data.Monoid
 
 data GeneticParams = GeneticParams {
     numIn :: Integer,
@@ -55,7 +56,7 @@ criaArquivoLogicE genParams = replace "#funcs" (geraFuncoes genParams)
 
 geraFuncoes :: GeneticParams -> String
 geraFuncoes genParams =
-   let todasFuncoes = ["and", "or", "xor", "not", "nand", "xnor", "nor", "buf"]
+   let todasFuncoes = ["and", "or", "not", "xor", "xnor", "nand", "nor", "buf"]
        funcoesUsadas = map snd $ filter fst (zip (funcoes genParams) todasFuncoes)
        funcModelo = "\t#func func#index(all_funcs[#index], #inputs);"
        replaceTudoLogicE (idx, func) = (replace "#inputs" (replaceInputs func)
@@ -69,9 +70,9 @@ geraFuncoes genParams =
                                  . replace "#cur_max" (show $ currentMax idx)) inputModelo
             in
                if func == "buf" || func == "not" then
-                   replaceInput (leNumIn genParams)
+                   replaceInput 1
                else
-                   intercalate ", " $ map replaceInput [leNumIn genParams, leNumIn genParams - 1..1]
+                   intercalate ", " $ map replaceInput [1..leNumIn genParams]
      in
        intercalate "\n" $ zipWith (curry replaceTudoLogicE) [0..] funcoesUsadas
 
@@ -123,6 +124,38 @@ criaArquivoFenotipo genParams = replace "#bits_pinos_1" (show $ bitsPinos genPar
                               . replace "#crom_translate_to_descrs" (geraAssociacoesCromossomo genParams)
                               . replace "#num_inputs_1" (show $ numIn genParams - 1)
                               . replace "#bits_total" (show $ bitsTotal genParams - 1)
+                              . replace "#genetic_modules" (geraModulosGeneticos (numIn genParams))
+                              . replace "#error_sum_assignment" (geraErrorSumAssignment (numIn genParams) (numOut genParams))
+                              . replace "#quant_inputs_1" (show $ (2 ^ (numIn genParams)) - 1)
+                              
+geraErrorSumAssignment :: Integer -> Integer -> String
+geraErrorSumAssignment numInputs numOutputs = 
+    let errorSumTemplate = intercalate "\n" [ "always @(*)"
+                                            , "begin"
+                                            , "\tfor(i = 0; i < #quant_in; i = i + 1)"
+                                            , "\t\tfor(j = 0; j < #num_out; j = j + 1)"
+                                            , "\t\t\tintermediateResults[i][j] = expectedResult[i][j] ^ out[i][j];"
+                                            , "end\n"
+                                            ]
+        errorSumAssignment = "\tassign errorSum = " <> (intercalate " + " $ map (\ix -> "intermediateResults[" <> show ix <> "]") [0..2^numInputs - 1]) <> ";"
+    in
+        intercalate "\n" [ errorSumAssignment
+                         , "\n"
+                         , replace "#quant_in" (show $ (2 ^ numInputs)) . replace "#num_out" (show $ numOutputs) $ errorSumTemplate
+                         ]
+                              
+geraModulosGeneticos :: Integer -> String
+geraModulosGeneticos numInputs =
+    let moduloTemplate = intercalate "\n" [ "genetico genetico#idx ("
+                                          , "\t.conf_les(descricao_les),"
+                                          , "\t.conf_outs(descricao_outs),"
+                                          , "\t.in(#idx),"
+                                          , "\t.out(out[#idx])"
+                                          , ");\n"
+                                          ]
+        moduloParcial = replace "#num_in" (show numInputs) moduloTemplate
+    in
+        concatMap (\idx -> replace "#idx" (show idx) moduloParcial) [0..(2 ^ numInputs) - 1]
 
 geraAssociacoesCromossomo :: GeneticParams -> String
 geraAssociacoesCromossomo genParams =

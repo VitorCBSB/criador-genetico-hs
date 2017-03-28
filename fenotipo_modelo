@@ -1,19 +1,20 @@
 module fenotipo(
-	input [#bits_total:0] cromossomo,
-	input [#num_inputs_1:0] in,
-	output wire [#num_outputs_1:0] out
+    input [#bits_total:0] cromossomo,
+    input [#quant_inputs_1:0][#num_outputs_1:0] expectedResult,
+    output wire [#quant_inputs_1:0][#num_outputs_1:0] out,
+    output wire [31:0] errorSum
 );
 
-	wire [#r:0][#c:0][#bits_les_1:0] descricao_les;
-	wire [#num_outputs_1:0][#bits_pinos_1:0] descricao_outs;
+    wire [#r:0][#c:0][#bits_les_1:0] descricao_les;
+    wire [#num_outputs_1:0][#bits_pinos_1:0] descricao_outs;
+    wire [#num_outputs_1:0] intermediateResults[#quant_inputs_1:0];
+    integer i;
+    integer j;
 
 #crom_translate_to_descrs
 
-genetico genetico (
-	.conf_les(descricao_les),
-	.conf_outs(descricao_outs),
-	.in(in),
-	.out(out)
-);
+#error_sum_assignment
+
+#genetic_modules
 
 endmodule
