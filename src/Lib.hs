@@ -99,7 +99,7 @@ geraLes genParams =
                                    , "\t.conf_func(conf_les[#r][#c][#bits_top:#bits_next]),"
                                    , "\t.conf_ins(conf_les[#r][#c][#bits_rest:0]),"
                                    , "\t.all_inputs(all_inputs),"
-                                   , "\t.out(le_out[#n])"
+                                   , "\t.leOut(le_out[#n])"
                                    , ");\n"]
         replaceTudoLE idx =
             let col = idx `div` numRows genParams
@@ -124,9 +124,10 @@ criaArquivoFenotipo genParams = replace "#bits_pinos_1" (show $ bitsPinos genPar
                               . replace "#crom_translate_to_descrs" (geraAssociacoesCromossomo genParams)
                               . replace "#num_inputs_1" (show $ numIn genParams - 1)
                               . replace "#bits_total" (show $ bitsTotal genParams - 1)
-                              . replace "#genetic_modules" (geraModulosGeneticos (numIn genParams))
+                              . replace "#genetic_modules" (geraModulosGeneticos (numIn genParams) (numOut genParams))
                               . replace "#error_sum_assignment" (geraErrorSumAssignment (numIn genParams) (numOut genParams))
                               . replace "#quant_inputs_1" (show $ (2 ^ (numIn genParams)) - 1)
+                              . replace "#quant_inputs_x_num_outputs_1" (show $ (2 ^ (numIn genParams)) * (numOut genParams) - 1)
                               
 geraErrorSumAssignment :: Integer -> Integer -> String
 geraErrorSumAssignment numInputs numOutputs = 
@@ -134,28 +135,30 @@ geraErrorSumAssignment numInputs numOutputs =
                                             , "begin"
                                             , "\tfor(i = 0; i < #quant_in; i = i + 1)"
                                             , "\t\tfor(j = 0; j < #num_out; j = j + 1)"
-                                            , "\t\t\tintermediateResults[i][j] = expectedResult[i][j] ^ out[i][j];"
+                                            , "\t\t\tintermediateResults[i][j] = expectedResult[i][j] ^ chromOut[i * #num_out + j];"
                                             , "end\n"
                                             ]
-        errorSumAssignment = "\tassign errorSum = " <> (intercalate " + " $ map (\ix -> "intermediateResults[" <> show ix <> "]") [0..2^numInputs - 1]) <> ";"
+        errorSumAssignment outIndex = 
+                "\tassign errorSums[" <> show outIndex <> "] = " <> (intercalate " + " $ map (\ix -> "intermediateResults[" <> show ix <> "][" <> show outIndex <> "]") [0..2^numInputs - 1]) <> ";"
     in
-        intercalate "\n" [ errorSumAssignment
+        intercalate "\n" [ intercalate "\n" $ map errorSumAssignment [0..numOutputs - 1]
                          , "\n"
                          , replace "#quant_in" (show $ (2 ^ numInputs)) . replace "#num_out" (show $ numOutputs) $ errorSumTemplate
                          ]
                               
-geraModulosGeneticos :: Integer -> String
-geraModulosGeneticos numInputs =
-    let moduloTemplate = intercalate "\n" [ "genetico genetico#idx ("
+geraModulosGeneticos :: Integer -> Integer -> String
+geraModulosGeneticos numInputs numOutputs =
+    let moduloTemplate = intercalate "\n" [ "genetico genetico#index ("
                                           , "\t.conf_les(descricao_les),"
                                           , "\t.conf_outs(descricao_outs),"
-                                          , "\t.in(#idx),"
-                                          , "\t.out(out[#idx])"
+                                          , "\t.chromIn(#index),"
+                                          , "\t.chromOut(chromOut[#idx_sup:#idx_inf])"
                                           , ");\n"
                                           ]
-        moduloParcial = replace "#num_in" (show numInputs) moduloTemplate
     in
-        concatMap (\idx -> replace "#idx" (show idx) moduloParcial) [0..(2 ^ numInputs) - 1]
+        concatMap (\idx -> (replace "#idx_sup" (show $ (idx * numOutputs) + (numOutputs - 1)) 
+                          . replace "#idx_inf" (show $ idx * numOutputs)
+                          . replace "#index" (show idx)) moduloTemplate) [0..(2 ^ numInputs) - 1]
 
 geraAssociacoesCromossomo :: GeneticParams -> String
 geraAssociacoesCromossomo genParams =

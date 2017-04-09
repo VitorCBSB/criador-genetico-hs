@@ -1,8 +1,8 @@
 module fenotipo(
     input [#bits_total:0] cromossomo,
     input [#quant_inputs_1:0][#num_outputs_1:0] expectedResult,
-    output wire [#quant_inputs_1:0][#num_outputs_1:0] out,
-    output wire [31:0] errorSum
+    output wire [#quant_inputs_x_num_outputs_1:0] chromOut,
+    output wire [#num_outputs_1:0][31:0] errorSums
 );
 
     wire [#r:0][#c:0][#bits_les_1:0] descricao_les;
