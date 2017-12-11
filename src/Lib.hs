@@ -85,8 +85,7 @@ criaArquivoGenetico genParams = replace "#all_inputs_for_out" geraOutputAssigns
                               . replace "#num_in" (show $ numIn genParams - 1)
                               . replace "#bits_pinos" (show $ bitsPinos genParams - 1)
                               . replace "#tam_le" (show $ bitsLe genParams - 1)
-                              . replace "#r" (show $ numRows genParams - 1)
-                              . replace "#c" (show $ numCols genParams - 1)
+                              . replace "#r_x_c" (show $ (numRows genParams * numCols genParams) - 1)
   where
     geraOutputAssigns =
       let outputModelo = "all_inputs[conf_outs[#idx]]"
@@ -95,12 +94,13 @@ criaArquivoGenetico genParams = replace "#all_inputs_for_out" geraOutputAssigns
 
 geraLes :: GeneticParams -> String
 geraLes genParams =
-    let leModelo = intercalate "\n" ["logic_e le#r#c("
-                                   , "\t.conf_func(conf_les[#r][#c][#bits_top:#bits_next]),"
-                                   , "\t.conf_ins(conf_les[#r][#c][#bits_rest:0]),"
-                                   , "\t.all_inputs(all_inputs),"
-                                   , "\t.leOut(le_out[#n])"
-                                   , ");\n"]
+    let leModelo = intercalate "\n" [ "logic_e le#r#c("
+                                    , "\t.conf_func(conf_les[#n][#bits_top:#bits_next]),"
+                                    , "\t.conf_ins(conf_les[#n][#bits_rest:0]),"
+                                    , "\t.all_inputs(all_inputs),"
+                                    , "\t.leOut(le_out[#n])"
+                                    , ");\n"
+                                    ]
         replaceTudoLE idx =
             let col = idx `div` numRows genParams
                 row = idx `mod` numRows genParams
@@ -119,14 +119,11 @@ criaArquivoFenotipo :: GeneticParams -> String -> String
 criaArquivoFenotipo genParams = replace "#bits_pinos_1" (show $ bitsPinos genParams - 1)
                               . replace "#num_outputs_1" (show $ numOut genParams - 1)
                               . replace "#bits_les_1" (show $ bitsLe genParams - 1)
-                              . replace "#r" (show $ numRows genParams - 1)
-                              . replace "#c" (show $ numCols genParams - 1)
+                              . replace "#r_x_c" (show $ (numRows genParams * numCols genParams) - 1)
                               . replace "#crom_translate_to_descrs" (geraAssociacoesCromossomo genParams)
                               . replace "#num_inputs_1" (show $ numIn genParams - 1)
                               . replace "#bits_total" (show $ bitsTotal genParams - 1)
-                              . replace "#genetic_modules" (geraModulosGeneticos (numIn genParams) (numOut genParams))
-                              . replace "#error_sum_assignment" (geraErrorSumAssignment (numIn genParams) (numOut genParams))
-                              . replace "#quant_inputs_1" (show $ (2 ^ (numIn genParams)) - 1)
+                              -- . replace "#genetic_modules" (geraModulosGeneticos (numIn genParams) (numOut genParams))
                               . replace "#quant_inputs_x_num_outputs_1" (show $ (2 ^ (numIn genParams)) * (numOut genParams) - 1)
                               
 geraErrorSumAssignment :: Integer -> Integer -> String
@@ -166,17 +163,14 @@ geraAssociacoesCromossomo genParams =
         currentLETop idx = ((idx + 1) * bitsLe genParams) - 1
         currentOutBot idx = bitsLes genParams + (idx * bitsPinos genParams)
         currentOutTop idx = bitsLes genParams + (((idx + 1) * bitsPinos genParams) - 1)
-        col idx = idx `div` numRows genParams
-        row idx = idx `mod` numRows genParams
         replaceTudoLE idx = replace "#cur_le_bot" (show $ currentLEBot idx)
                           . replace "#cur_le_top" (show $ currentLETop idx)
-                          . replace "#cur_c" (show $ col idx)
-                          . replace "#cur_r" (show $ row idx)
+                          . replace "#cur_rc" (show idx)
         replaceTudoOut idx = replace "#cur_out_bot" (show $ currentOutBot idx)
                            . replace "#cur_out_top" (show $ currentOutTop idx)
                            . replace "#cur_idx_out" (show idx)
         associacoesLes =
-            let leModelo = "\tassign descricao_les[#cur_r][#cur_c] = cromossomo[#cur_le_top:#cur_le_bot];"
+            let leModelo = "\tassign descricao_les[#cur_rc] = cromossomo[#cur_le_top:#cur_le_bot];"
             in
                 intercalate "\n" $ map (`replaceTudoLE` leModelo) [0..numLes genParams - 1]
         associacoesOuts =

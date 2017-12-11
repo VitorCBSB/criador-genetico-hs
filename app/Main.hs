@@ -1,6 +1,7 @@
 module Main where
 
 import Lib
+import Data.Monoid
 import System.Environment
 import Options.Applicative
 
@@ -44,11 +45,14 @@ genParams = GeneticParams
 
 actualMain :: GeneticParams -> IO ()
 actualMain geneticParams =
+    let realGenParams = geneticParams { numIn = numIn geneticParams }
+    in
     do
+    
         arquivoLogicE <- readFile "logic_e_modelo"
         arquivoGenetico <- readFile "genetico_modelo"
         arquivoFenotipo <- readFile "fenotipo_modelo"
 
-        writeFile "logic_e.v" (criaArquivoLogicE geneticParams arquivoLogicE)
-        writeFile "genetico.v" (criaArquivoGenetico geneticParams arquivoGenetico)
-        writeFile "fenotipo.v" (criaArquivoFenotipo geneticParams arquivoFenotipo)
+        writeFile "logic_e.v" (criaArquivoLogicE realGenParams arquivoLogicE)
+        writeFile "genetico.v" (criaArquivoGenetico realGenParams arquivoGenetico)
+        writeFile "fenotipo.v" (criaArquivoFenotipo realGenParams arquivoFenotipo)
