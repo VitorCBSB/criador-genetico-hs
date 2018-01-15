@@ -6,9 +6,25 @@ module logic_e(conf_func, conf_ins, all_inputs, leOut);
 	output leOut;
 	
 	wire all_funcs[#num_funcs_1:0];
+    wire post_lcell[#num_funcs_1:0];
 	
 #funcs
 	
-	assign leOut = all_funcs[conf_func];
+genvar i;
+generate for (i = 0; i <= #num_funcs_1; i++)
+begin : lcells
+    
+    LCELL lcell_inst 
+        ( .in(all_funcs[i])
+        , .out(post_lcell[i])
+        );
+
+end
+endgenerate
+
+LCELL out_inst
+    ( .in(post_lcell[conf_func])
+    , .out(leOut)
+    );
 
 endmodule
